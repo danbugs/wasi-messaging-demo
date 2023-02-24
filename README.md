@@ -14,3 +14,5 @@ To run the demo.:
 ```sh
 make build
 make componentize
+make run
+```
