@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", features = ["component-model"], branch = 'release-6.0.0' }
+wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", features = ["component-model", "default"], rev = "a76e0e8aa57220fe9c75f810c293ba2694d65e7a" }
 anyhow = "1"
-wasi-common = { git = "https://github.com/bytecodealliance/preview2-prototyping"}
-wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-prototyping" }
-host = { git = "https://github.com/bytecodealliance/preview2-prototyping" }
+wasi-common = { git = "https://github.com/danbugs/preview2-prototyping", branch = "old-state"}
+wasi-cap-std-sync = { git = "https://github.com/danbugs/preview2-prototyping", branch = "old-state"}
+host = { git = "https://github.com/danbugs/preview2-prototyping", branch = "old-state"}
 async-trait = "0.1"
 tokio = { version = "1.22.0", features = [ "rt-multi-thread", "macros" ] }

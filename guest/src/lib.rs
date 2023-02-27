@@ -1,41 +1,24 @@
-use crate::{
-    messaging_types::{open_broker, Channel, EventParam},
-    producer::publish,
-};
+use messaging::HandlerError;
 
-wit_bindgen::generate!({
-    path: "../wit",
+use crate::pubsub::{open_broker, publish};
+
+wit_bindgen_guest_rust::generate!({
+    path: "../wit/messaging.wit",
 });
 
 struct MyMessaging;
 
-impl handler::Handler for MyMessaging {
-    fn on_receive(e: messaging_types::EventResult) -> Result<(), u32> {
-        println!(">>> Received: {:#?}", e);
-
-        let data = e.data.unwrap();
-        let data_s = String::from_utf8(data).unwrap();
-
+impl messaging::Messaging for MyMessaging {
+    fn on_receive(e: String) -> Result<(), HandlerError> {
+        println!(">>> Received: {:#?}", &e);
         // process the data
-        let msg = fizz_buzz(data_s.as_str());
+        let msg = fizz_buzz(&e);
 
         // published the processed data
-        let b = open_broker("my-messaging")?;
-        let new_event = EventParam {
-            data: Some(msg.as_bytes()),
-            id: "123",
-            source: "rust",
-            specversion: "1.0",
-            ty: "com.my-messaing.rust.fizzbuzz",
-            datacontenttype: None,
-            dataschema: None,
-            subject: None,
-            time: None,
-            extensions: None,
-        };
+        let b = open_broker("my-messaging").unwrap();
 
-        println!(">>> Publishing: {:#?}", new_event);
-        publish(b, Channel::Topic("rust"), new_event)?;
+        println!(">>> Publishing: {:#?}", &msg);
+        publish(b, "rust", &msg).unwrap();
 
         Ok(())
     }

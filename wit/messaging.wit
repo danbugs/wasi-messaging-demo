@@ -1,5 +1,57 @@
-default world messaging {
-	import producer: pkg.producer
-	import consumer: pkg.consumer
-	export handler: pkg.handler
+/// An interface for a producer.
+interface pubsub {
+    /// A broker type that allows the exchange of messages.
+    type broker = u32
+    drop-broker: func(b: broker)
+    open-broker: func(name: string) -> result<broker, error>
+
+	// A subscription token that allows receives from a specific subscription
+	type subscription-token = string
+
+	// A simplified event type
+	type event = string
+
+	// A simplified channel type
+	type channel = string
+
+	/// Publishes an event to a channel in a broker.
+	publish: func(b: broker, c: channel, e: event) -> result<_, error>
+
+	/// Subscribes to a channel in a broker.
+  	subscribe: func(b: broker, c: channel) -> result<subscription-token, error>
+
+	/// Unsubscribes from a channel via subscription token.
+  	unsubscribe: func(b: broker, st: subscription-token) -> result<_, error>
+
+    /// A simplified error type
+    variant error {
+        payload-too-large(string),
+        queue-or-topic-not-found(string),
+        insufficient-permissions(string),
+        service-unavailable(string),
+        delivery-failed(string),
+        connection-lost(string),
+        unsupported-message-format(string),
+        unexpected-error(string),
+    }
+}
+
+/// An interface for a consumer relying on push-based message delivery.
+interface handler {
+	// A (duplicate) simplified event type
+	type event = string
+
+	/// Creates an on-receive handler push-based message delivery.
+  	on-receive: func(e: event) -> result<_, handler-error>
+
+	/// A simplified type for handler errors
+	variant handler-error {
+		invalid-payload(string),
+		handler-internal-error(string),
+	}
+}
+
+world messaging {
+	import pubsub: pubsub
+	default export handler
 }
