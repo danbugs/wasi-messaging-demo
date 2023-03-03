@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-wasmtime = { git = "https://github.com/bytecodealliance/wasmtime", features = ["component-model"], branch = 'release-6.0.0' }
+wasmtime = { version = "6.0.0", features = ["component-model"] }
 anyhow = "1"
 wasi-common = { git = "https://github.com/bytecodealliance/preview2-prototyping"}
 wasi-cap-std-sync = { git = "https://github.com/bytecodealliance/preview2-prototyping" }
