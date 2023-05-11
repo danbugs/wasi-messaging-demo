@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "host",
-    "guest"
+    "guest",
+    "docs/stakeholder-review-code-examples/e0-single-consumer-checkpointing",
 ]
