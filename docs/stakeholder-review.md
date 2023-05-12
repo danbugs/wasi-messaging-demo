@@ -41,4 +41,4 @@ Even though some implementors do not provide native support for checkpointing, i
 
 As seen before, no implementor (other than Kafka) offers native support for checkpointing, but, in addition, no implementor (again, other than Kafka) offers support for consumer groups either.
 
-However, it is possible to emulate consumer groups with things like: subject based message queuing.
+However, it is possible to emulate consumer groups with things like...
