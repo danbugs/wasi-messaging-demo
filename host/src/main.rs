@@ -51,9 +51,9 @@ impl MessagingTypes for MyTypes {
 impl Producer for MyProducer {
     async fn send(
         &mut self,
-        c: u32,
-        ch: messaging_types::Channel,
-        msg: Vec<messaging_types::MessageResult>,
+        _c: u32,
+        _ch: messaging_types::Channel,
+        _msg: Vec<messaging_types::MessageResult>,
     ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
         println!(">>> called publish");
         Ok(Ok(()))
@@ -62,11 +62,54 @@ impl Producer for MyProducer {
 
 #[async_trait::async_trait]
 impl Consumer for MyConsumer {
-    async fn subscribe_try_receive(&mut self, c: u32, ch: String, ms_timeout: u32) -> std::result::Result<std::result::Result<std::option::Option<Vec<messaging_types::MessageResult>>, u32>, anyhow::Error> { todo!() }
-    async fn subscribe_receive(&mut self, c: u32, ch: String) -> std::result::Result<std::result::Result<Vec<messaging_types::MessageResult>, u32>, anyhow::Error> { todo!() }
-    async fn update_guest_configuration(&mut self, c: messaging_types::GuestConfiguration) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> { todo!() }
-    async fn complete_message(&mut self, msg: messaging_types::MessageResult) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> { todo!() }
-    async fn abandon_message(&mut self, msg: messaging_types::MessageResult) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> { todo!() }
+    async fn subscribe_try_receive(
+        &mut self,
+        _c: u32,
+        _ch: String,
+        _ms_timeout: u32,
+    ) -> std::result::Result<
+        std::result::Result<std::option::Option<Vec<messaging_types::MessageResult>>, u32>,
+        anyhow::Error,
+    > {
+        println!("called subscribe_try_receive");
+        return Ok(Ok(None));
+    }
+
+    async fn subscribe_receive(
+        &mut self,
+        _c: u32,
+        _ch: String,
+    ) -> std::result::Result<
+        std::result::Result<Vec<messaging_types::MessageResult>, u32>,
+        anyhow::Error,
+    > {
+        println!("called subscribe_receive");
+        return Ok(Ok(Vec::new()));
+    }
+
+    async fn update_guest_configuration(
+        &mut self,
+        _c: messaging_types::GuestConfiguration,
+    ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
+        println!("called update_guest_configuration");
+        return Ok(Ok(()));
+    }
+
+    async fn complete_message(
+        &mut self,
+        _msg: messaging_types::MessageResult,
+    ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
+        println!("called complete_message");
+        return Ok(Ok(()));
+    }
+
+    async fn abandon_message(
+        &mut self,
+        _msg: messaging_types::MessageResult,
+    ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
+        println!("called abandon_message");
+        return Ok(Ok(()));
+    }
 }
 
 pub struct Ctx {
@@ -110,7 +153,7 @@ async fn main() -> anyhow::Result<()> {
     let component = Component::from_file(&engine, "guest.component.wasm")?;
     let (messaging, _) = Messaging::instantiate_async(&mut store, &component, &linker).await?;
 
-    let res = messaging.guest.call_configure(&mut store).await?;
+    let _res = messaging.guest.call_configure(&mut store).await?;
 
     // pretend to configure
 
@@ -123,7 +166,7 @@ async fn main() -> anyhow::Result<()> {
         metadata: None,
     };
 
-    let res = messaging.guest.call_handler(&mut store, &vec![msg]).await?;
+    let res = messaging.guest.call_handler(&mut store, &[msg]).await?;
 
     println!(">>> called run: {:#?}", res);
 

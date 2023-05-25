@@ -18,7 +18,7 @@ impl guest::Guest for MyGuest {
         Ok(gcr)
     }
 
-    fn handler(ms: Vec<MessageResult>) -> Result<(), u32> {
+    fn handler(_ms: Vec<MessageResult>) -> Result<(), u32> {
         println!("handling message");
 
         Ok(())
