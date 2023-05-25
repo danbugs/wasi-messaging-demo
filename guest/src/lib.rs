@@ -1,49 +1,28 @@
-use crate::{
-    messaging_types::{open_broker, Channel, EventParam},
-    producer::publish,
-};
+use crate::messaging_types::{GuestConfigurationResult, MessageResult};
 
 wit_bindgen::generate!({
-    path: "../wit",
+    path: "../wit", 
 });
 
-struct MyMessaging;
+struct MyGuest;
 
-impl handler::Handler for MyMessaging {
-    fn on_receive(e: messaging_types::EventResult) -> Result<(), u32> {
-        println!(">>> Received: {:#?}", e);
+impl guest::Guest for MyGuest {
+    fn configure() -> Result<GuestConfigurationResult, u32> {
+        println!("host called configure");
 
-        let data = e.data.unwrap();
-        let data_s = String::from_utf8(data).unwrap();
-
-        // process the data
-        let msg = fizz_buzz(data_s.as_str());
-
-        // published the processed data
-        let b = open_broker("my-messaging")?;
-        let new_event = EventParam {
-            data: Some(msg.as_bytes()),
-            id: "123",
-            source: "rust",
-            specversion: "1.0",
-            ty: "com.my-messaing.rust.fizzbuzz",
-            datacontenttype: None,
-            dataschema: None,
-            subject: None,
-            time: None,
+        let gcr = GuestConfigurationResult {
+            channels: vec!["a".to_string(), "b".to_string(), "c".to_string()],
             extensions: None,
         };
 
-        println!(">>> Publishing: {:#?}", new_event);
-        publish(b, Channel::Topic("rust"), new_event)?;
+        Ok(gcr)
+    }
+
+    fn handler(ms: Vec<MessageResult>) -> Result<(), u32> {
+        println!("handling message");
 
         Ok(())
     }
 }
 
-export_messaging!(MyMessaging);
-
-// replace all instances of fizz in a word w/ buzz
-fn fizz_buzz(word: &str) -> String {
-    word.replace("fizz", "buzz")
-}
+export_messaging!(MyGuest);
