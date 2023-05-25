@@ -27,22 +27,22 @@ impl MessagingTypes for MyTypes {
         &mut self,
         _: std::string::String,
     ) -> std::result::Result<std::result::Result<u32, u32>, anyhow::Error> {
-        println!(">>> called connect");
+        println!("called connect");
         Ok(Ok(0))
     }
 
     async fn disconnect(&mut self, _: u32) -> std::result::Result<(), anyhow::Error> {
-        println!(">>> called disconnect");
+        println!("called disconnect");
         Ok(())
     }
 
     async fn drop_error(&mut self, _: u32) -> std::result::Result<(), anyhow::Error> {
-        println!(">>> called drop_error");
+        println!("called drop_error");
         Ok(())
     }
 
     async fn trace(&mut self, _: u32) -> std::result::Result<std::string::String, anyhow::Error> {
-        println!(">>> called trace");
+        println!("called trace");
         Ok("".to_string())
     }
 }
@@ -55,7 +55,7 @@ impl Producer for MyProducer {
         _ch: messaging_types::Channel,
         _msg: Vec<messaging_types::MessageResult>,
     ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
-        println!(">>> called publish");
+        println!("called send");
         Ok(Ok(()))
     }
 }
@@ -166,9 +166,7 @@ async fn main() -> anyhow::Result<()> {
         metadata: None,
     };
 
-    let res = messaging.guest.call_handler(&mut store, &[msg]).await?;
-
-    println!(">>> called run: {:#?}", res);
+    let _res = messaging.guest.call_handler(&mut store, &[msg]).await?;
 
     Ok(())
 }
