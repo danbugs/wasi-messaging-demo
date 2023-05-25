@@ -1,7 +1,7 @@
 use crate::messaging_types::{GuestConfigurationResult, MessageResult};
 
 wit_bindgen::generate!({
-    path: "../wit", 
+    path: "../wit",
 });
 
 struct MyGuest;
