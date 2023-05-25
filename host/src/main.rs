@@ -4,6 +4,8 @@ wasmtime::component::bindgen!({
     async: true,
 });
 
+use std::{thread, time::Duration};
+
 use host::{add_to_linker, WasiCtx};
 use messaging_types::MessagingTypes;
 use wasi_cap_std_sync::WasiCtxBuilder;
@@ -12,90 +14,108 @@ use wasmtime::{
     Config, Engine, Store,
 };
 
-use crate::{consumer::Consumer, handler::EventParam, producer::Producer};
+use crate::{consumer::Consumer, producer::Producer};
 
 struct MyProducer;
 struct MyConsumer;
 
-struct MyError;
+struct MyTypes;
 
 #[async_trait::async_trait]
-impl MessagingTypes for MyError {
-    async fn open_broker(
+impl MessagingTypes for MyTypes {
+    async fn connect(
         &mut self,
         _: std::string::String,
-    ) -> std::result::Result<std::result::Result<u32, u32>, anyhow::Error>
-    {
-        println!(">>> called open_broker");
+    ) -> std::result::Result<std::result::Result<u32, u32>, anyhow::Error> {
+        println!("called connect");
         Ok(Ok(0))
     }
 
-    async fn drop_broker(
-        &mut self,
-        _: u32,
-    ) -> std::result::Result<(), anyhow::Error>
-    {
-        println!(">>> called drop_broker");
+    async fn disconnect(&mut self, _: u32) -> std::result::Result<(), anyhow::Error> {
+        println!("called disconnect");
         Ok(())
     }
 
-    async fn drop_error(
-        &mut self,
-        _: u32,
-    ) -> std::result::Result<(), anyhow::Error>
-    {
-        println!(">>> called drop_error");
+    async fn drop_error(&mut self, _: u32) -> std::result::Result<(), anyhow::Error> {
+        println!("called drop_error");
         Ok(())
     }
 
-    async fn trace(
-        &mut self,
-        _: u32,
-    ) -> std::result::Result<std::string::String, anyhow::Error>
-    {
-        println!(">>> called trace");
+    async fn trace(&mut self, _: u32) -> std::result::Result<std::string::String, anyhow::Error> {
+        println!("called trace");
         Ok("".to_string())
     }
 }
 
 #[async_trait::async_trait]
 impl Producer for MyProducer {
-    async fn publish(
+    async fn send(
         &mut self,
-        _: u32,
-        _: messaging_types::Channel,
-        _: messaging_types::EventResult,
+        _c: u32,
+        _ch: messaging_types::Channel,
+        _msg: Vec<messaging_types::MessageResult>,
     ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
-        println!(">>> called publish");
+        println!("called send");
         Ok(Ok(()))
     }
 }
 
 #[async_trait::async_trait]
 impl Consumer for MyConsumer {
-    async fn subscribe(
+    async fn subscribe_try_receive(
         &mut self,
-        _: u32,
-        _: messaging_types::Channel,
-    ) -> std::result::Result<std::result::Result<std::string::String, u32>, anyhow::Error> {
-        println!(">>> called subscribe");
-        Ok(Ok("".to_string()))
+        _c: u32,
+        _ch: String,
+        _ms_timeout: u32,
+    ) -> std::result::Result<
+        std::result::Result<std::option::Option<Vec<messaging_types::MessageResult>>, u32>,
+        anyhow::Error,
+    > {
+        println!("called subscribe_try_receive");
+        return Ok(Ok(None));
     }
 
-    async fn unsubscribe(
+    async fn subscribe_receive(
         &mut self,
-        _: u32,
-        _: std::string::String,
+        _c: u32,
+        _ch: String,
+    ) -> std::result::Result<
+        std::result::Result<Vec<messaging_types::MessageResult>, u32>,
+        anyhow::Error,
+    > {
+        println!("called subscribe_receive");
+        return Ok(Ok(Vec::new()));
+    }
+
+    async fn update_guest_configuration(
+        &mut self,
+        _c: messaging_types::GuestConfiguration,
     ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
-        println!(">>> called unsubscribe");
-        Ok(Ok(()))
+        println!("called update_guest_configuration");
+        return Ok(Ok(()));
+    }
+
+    async fn complete_message(
+        &mut self,
+        _msg: messaging_types::MessageResult,
+    ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
+        println!("called complete_message");
+        return Ok(Ok(()));
+    }
+
+    async fn abandon_message(
+        &mut self,
+        _msg: messaging_types::MessageResult,
+    ) -> std::result::Result<std::result::Result<(), u32>, anyhow::Error> {
+        println!("called abandon_message");
+        return Ok(Ok(()));
     }
 }
 
 pub struct Ctx {
     producer: MyProducer,
     consumer: MyConsumer,
-    types: MyError,
+    types: MyTypes,
     wasi: WasiCtx,
 }
 
@@ -103,7 +123,7 @@ pub struct Ctx {
 async fn main() -> anyhow::Result<()> {
     let producer = MyProducer;
     let consumer = MyConsumer;
-    let types = MyError;
+    let types = MyTypes;
 
     let wasi = WasiCtxBuilder::new().build();
 
@@ -133,25 +153,20 @@ async fn main() -> anyhow::Result<()> {
     let component = Component::from_file(&engine, "guest.component.wasm")?;
     let (messaging, _) = Messaging::instantiate_async(&mut store, &component, &linker).await?;
 
-    let new_event = EventParam {
-        data: Some("fizz".as_bytes()),
-        id: "123",
-        source: "rust",
-        specversion: "1.0",
-        ty: "com.my-messaing.rust.fizzbuzz",
-        datacontenttype: None,
-        dataschema: None,
-        subject: None,
-        time: None,
-        extensions: None,
+    let _res = messaging.guest.call_configure(&mut store).await?;
+
+    // pretend to configure
+
+    thread::sleep(Duration::from_secs(1));
+
+    // pretend to have received a message
+    let msg = messaging_types::MessageParam {
+        data: &vec![1, 2, 3][..],
+        format: messaging_types::FormatSpec::Http,
+        metadata: None,
     };
 
-    let res = messaging
-        .handler
-        .call_on_receive(&mut store, new_event)
-        .await?;
-
-    println!(">>> called on_receive: {:#?}", res);
+    let _res = messaging.guest.call_handler(&mut store, &[msg]).await?;
 
     Ok(())
 }

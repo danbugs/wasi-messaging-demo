@@ -12,3 +12,6 @@ componentize:
 run:
 	@echo "Running..."
 	@cargo run --manifest-path ./host/Cargo.toml
+
+.PHONY: all
+all: build componentize run
